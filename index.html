@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMILY💖</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000000;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #canvas {
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let time = 0;
+        let heartParticles = [];
+        let fireworks = [];
+        
+        // Configuración
+        const config = {
+            heartParticleCount: 400, // Reducido para móviles
+            nameFontSize: 36, // Tamaño de fuente más pequeño
+            fireworkCount: 3 // Menos fuegos artificiales para móviles
+        };
+
+        // Clase para partículas del corazón
+        class HeartParticle {
+            constructor() {
+                this.angle = Math.random() * Math.PI * 2;
+                this.radius = Math.random() * 0.8 + 0.2; // Para rellenar el corazón
+                this.speed = Math.random() * 0.02 + 0.01;
+                this.pulse = Math.random() * Math.PI * 2;
+                this.brightness = Math.random() * 0.5 + 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.angle += this.speed;
+                this.pulse += 0.1;
+            }
+
+            getPosition() {
+                const t = this.angle;
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+                
+                // Ajustar tamaño del corazón según el tamaño de pantalla
+                const heartScale = Math.min(canvas.width, canvas.height) / 800;
+                const heartSize = 6 * heartScale;
+                
+                return {
+                    x: (x * this.radius) * heartSize + canvas.width / 2,
+                    y: (y * this.radius) * heartSize + canvas.height / 2 - (30 * heartScale)
+                };
+            }
+
+            draw() {
+                const pos = this.getPosition();
+                const glow = Math.sin(this.pulse + time * 3) * 0.3 + 0.7;
+                const size = this.size + glow * 1.5;
+                const alpha = this.brightness * (0.8 + glow * 0.2);
+
+                // Punto central
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+                ctx.fill();
+
+                // Halo
+                const gradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, size * 3);
+                gradient.addColorStop(0, `rgba(255, 0, 0, ${alpha * 0.8})`);
+                gradient.addColorStop(0.6, `rgba(255, 20, 20, ${alpha * 0.3})`);
+                gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, size * 3, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            }
+        }
+
+        // Clase para fuegos artificiales
+        class Firework {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 10;
+                this.targetY = Math.random() * (canvas.height * 0.6);
+                this.speed = Math.random() * 3 + 2;
+                this.particles = [];
+                this.exploded = false;
+                this.life = 100;
+                this.trail = [];
+            }
+
+            update() {
+                if (!this.exploded) {
+                    // Mover hacia arriba
+                    this.y -= this.speed;
+                    
+                    // Añadir a la estela
+                    this.trail.push({x: this.x, y: this.y});
+                    if (this.trail.length > 10) {
+                        this.trail.shift();
+                    }
+
+                    // Explotar cuando llega al objetivo
+                    if (this.y <= this.targetY) {
+                        this.explode();
+                    }
+                } else {
+                    // Actualizar partículas de la explosión
+                    this.particles.forEach((particle, index) => {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.vy += 0.1; // Gravedad
+                        particle.life--;
+                        
+                        if (particle.life <= 0) {
+                            this.particles.splice(index, 1);
+                        }
+                    });
+                    
+                    this.life--;
+                }
+            }
+
+            explode() {
+                this.exploded = true;
+                // Crear partículas de explosión
+                for (let i = 0; i < 30; i++) {
+                    const angle = (i / 30) * Math.PI * 2;
+                    const speed = Math.random() * 5 + 3;
+                    this.particles.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 60,
+                        size: Math.random() * 3 + 1
+                    });
+                }
+            }
+
+            draw() {
+                if (!this.exploded) {
+                    // Dibujar estela
+                    this.trail.forEach((point, index) => {
+                        const alpha = index / this.trail.length;
+                        ctx.beginPath();
+                        ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.8})`;
+                        ctx.fill();
+                    });
+
+                    // Dibujar cohete
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
+                    ctx.fill();
+                } else {
+                    // Dibujar partículas de explosión
+                    this.particles.forEach(particle => {
+                        const alpha = particle.life / 60;
+                        ctx.beginPath();
+                        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+                        ctx.fill();
+                        
+                        // Halo de la partícula
+                        const gradient = ctx.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, particle.size * 2);
+                        gradient.addColorStop(0, `rgba(255, 0, 0, ${alpha * 0.6})`);
+                        gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                        ctx.beginPath();
+                        ctx.arc(particle.x, particle.y, particle.size * 2, 0, Math.PI * 2);
+                        ctx.fillStyle = gradient;
+                        ctx.fill();
+                    });
+                }
+            }
+        }
+
+        // Clase para letras del nombre
+        class NameLetter {
+            constructor(letter, index) {
+                this.letter = letter;
+                this.index = index;
+                this.x = 0;
+                this.y = 0;
+                this.rotation = 0;
+                this.rotationSpeed = 0.03; // Misma velocidad para todas
+                this.pulse = Math.random() * Math.PI * 2;
+                this.brightness = Math.random() * 0.5 + 0.5;
+                this.scale = 0;
+                this.targetScale = 1;
+                this.animationDelay = index * 0.2;
+            }
+
+            update() {
+                this.rotation += this.rotationSpeed;
+                this.pulse += 0.1;
+                
+                // Animación de aparición
+                if (time > this.animationDelay) {
+                    this.scale += (this.targetScale - this.scale) * 0.1;
+                }
+            }
+
+            draw() {
+                if (this.scale < 0.1) return;
+
+                const glow = Math.sin(this.pulse + time * 2) * 0.3 + 0.7;
+                const alpha = this.brightness * (0.8 + glow * 0.2);
+                const currentScale = this.scale * (0.8 + glow * 0.4);
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.scale(currentScale, currentScale);
+
+                // Configurar fuente
+                ctx.font = `bold ${config.nameFontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // Sombra del texto
+                ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
+                ctx.shadowBlur = 20;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                // Color del texto con gradiente
+                const gradient = ctx.createLinearGradient(-20, -20, 20, 20);
+                gradient.addColorStop(0, `rgba(255, 0, 0, ${alpha})`);
+                gradient.addColorStop(0.5, `rgba(255, 50, 50, ${alpha})`);
+                gradient.addColorStop(1, `rgba(255, 0, 0, ${alpha})`);
+
+                ctx.fillStyle = gradient;
+                ctx.fillText(this.letter, 0, 0);
+
+                // Contorno del texto
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                ctx.lineWidth = 2;
+                ctx.strokeText(this.letter, 0, 0);
+
+                ctx.restore();
+            }
+        }
+
+        // Inicializar partículas del corazón
+        function initHeartParticles() {
+            heartParticles = [];
+            for (let i = 0; i < config.heartParticleCount; i++) {
+                heartParticles.push(new HeartParticle());
+            }
+        }
+
+        // Inicializar fuegos artificiales
+        function initFireworks() {
+            fireworks = [];
+            for (let i = 0; i < config.fireworkCount; i++) {
+                fireworks.push(new Firework());
+            }
+        }
+
+        // Crear letras del nombre
+        function createNameLetters() {
+            const letters = 'EMILY';
+            const screenWidth = window.innerWidth;
+            const letterSpacing = screenWidth < 768 ? 40 : 60;
+            const startX = -(letters.length * letterSpacing) / 2;
+            const nameY = canvas.height / 2 + (screenWidth < 768 ? 60 : 100);
+
+            const nameLetters = [];
+            letters.split('').forEach((letter, index) => {
+                const letterObj = new NameLetter(letter, index);
+                letterObj.x = startX + index * letterSpacing + canvas.width / 2;
+                letterObj.y = nameY;
+                nameLetters.push(letterObj);
+            });
+
+            return nameLetters;
+        }
+
+        // Dibujar partículas del corazón
+        function drawHeartParticles() {
+            heartParticles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+        }
+
+        // Dibujar fuegos artificiales
+        function drawFireworks() {
+            fireworks.forEach((firework, index) => {
+                firework.update();
+                firework.draw();
+                
+                // Reiniciar fuego artificial cuando termina
+                if (firework.exploded && firework.particles.length === 0) {
+                    firework.reset();
+                }
+            });
+        }
+
+        // Dibujar nombre
+        function drawName(nameLetters) {
+            nameLetters.forEach(letter => {
+                letter.update();
+                letter.draw();
+            });
+        }
+
+        // Función principal de animación
+        function animate() {
+            // Limpiar canvas con efecto de desvanecimiento
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            time += 0.016;
+
+            // Dibujar elementos
+            drawHeartParticles();
+            drawFireworks();
+            drawName(nameLetters);
+
+            requestAnimationFrame(animate);
+        }
+
+        // Variables globales
+        let nameLetters;
+
+        // Inicializar
+        nameLetters = createNameLetters();
+        animate();
+
+        // Ajustar tamaño del canvas
+        function resizeCanvas() {
+            // Obtener dimensiones de la pantalla
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            // Configurar canvas para ocupar toda la pantalla
+            canvas.width = screenWidth;
+            canvas.height = screenHeight;
+            
+            // Ajustar configuración según el tamaño de pantalla
+            if (screenWidth < 768) { // Móvil
+                config.heartParticleCount = 300;
+                config.nameFontSize = 28;
+                config.fireworkCount = 2;
+            } else if (screenWidth < 1024) { // Tablet
+                config.heartParticleCount = 500;
+                config.nameFontSize = 32;
+                config.fireworkCount = 3;
+            } else { // Desktop
+                config.heartParticleCount = 800;
+                config.nameFontSize = 48;
+                config.fireworkCount = 5;
+            }
+            
+            // Recrear letras con nueva posición
+            nameLetters.length = 0;
+            const letters = 'EMILY';
+            const letterSpacing = screenWidth < 768 ? 40 : 60; // Espaciado más pequeño en móviles
+            const startX = -(letters.length * letterSpacing) / 2;
+            const nameY = canvas.height / 2 + (screenWidth < 768 ? 60 : 100); // Más cerca en móviles
+
+            letters.split('').forEach((letter, index) => {
+                const letterObj = new NameLetter(letter, index);
+                letterObj.x = startX + index * letterSpacing + canvas.width / 2;
+                letterObj.y = nameY;
+                nameLetters.push(letterObj);
+            });
+            
+            // Reinicializar partículas y fuegos artificiales con nueva configuración
+            initHeartParticles();
+            initFireworks();
+        }
+
+        // Eventos para responsive
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 100); // Pequeño delay para orientación
+        });
+        
+        // Inicializar con el tamaño correcto
+        resizeCanvas();
+    </script>
+</body>
+</html> 

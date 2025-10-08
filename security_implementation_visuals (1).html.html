@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementación de Seguridad - Imágenes para Word</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            padding: 40px 20px;
+        }
+        
+        .instructions {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .instructions h1 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+        
+        .instructions p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .image-container {
+            background: white;
+            border-radius: 15px;
+            padding: 0;
+            margin-bottom: 40px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            page-break-inside: avoid;
+        }
+        
+        .image-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .image-content {
+            padding: 30px;
+        }
+        
+        .window-mock {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f9fa;
+            margin: 15px 0;
+        }
+        
+        .window-titlebar {
+            background: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%);
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        .window-dots {
+            display: flex;
+            gap: 8px;
+            margin-right: 15px;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        
+        .window-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+        
+        .window-body {
+            padding: 25px;
+            background: white;
+        }
+        
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            background: #f8f9fa;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .setting-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+        }
+        
+        .setting-value {
+            font-weight: bold;
+            color: #28a745;
+            background: #d4edda;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.95em;
+        }
+        
+        .setting-disabled {
+            color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .code-box {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .code-comment { color: #5c6370; font-style: italic; }
+        .code-keyword { color: #c678dd; font-weight: bold; }
+        .code-string { color: #98c379; }
+        .code-function { color: #61afef; }
+        
+        .vlan-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .vlan-card {
+            border: 4px solid;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .vlan-servers {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+        }
+        
+        .vlan-users {
+            border-color: #17a2b8;
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+        }
+        
+        .vlan-guests {
+            border-color: #ffc107;
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+        }
+        
+        .vlan-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .vlan-info {
+            margin: 10px 0;
+            font-size: 1.05em;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .metric-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .metric-label {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .alert-box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid;
+            font-size: 1.05em;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        
+        .policy-card {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .policy-title {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.15em;
+            margin-bottom: 10px;
+        }
+        
+        .policy-detail {
+            color: #333;
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .timeline {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 10%;
+            right: 10%;
+            height: 4px;
+            background: #ddd;
+            z-index: 0;
+        }
+        
+        .timeline-item {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            background: white;
+            padding: 10px;
+        }
+        
+        .timeline-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 2em;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .timeline-day1 { background: #ffc107; }
+        .timeline-day7 { background: #ff9800; }
+        .timeline-day14 { background: #dc3545; }
+        
+        .folder-box {
+            border: 3px solid;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .folder-confidential {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+        }
+        
+        .folder-public {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #f0fff4 0%, #d4edda 100%);
+        }
+        
+        .folder-header {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+        }
+        
+        .permission-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 1.05em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 1.05em;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .icon-large {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h1>📸 Imágenes para Documento Word</h1>
+        <p>Captura cada imagen (clic derecho → Guardar imagen) y pégala en tu documento Word</p>
+        <p style="margin-top: 10px; font-size: 0.95em;">Cada sección está diseñada para ser autocontenida y lista para imprimir</p>
+    </div>
+
+    <!-- IMAGEN 1: Windows 11 - Actualizaciones -->
+    <div class="image-container">
+        <div class="image-header">
+            💻 Figura 1: Windows 11 - Configuración de Actualizaciones Automáticas
+        </div>
+        <div class="image-content">
+            <div class="window-mock">
+                <div class="window-titlebar">
+                    <div class="window-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="window-title">Configuración > Windows Update</div>
+                </div>
+                <div class="window-body">
+                    <div class="setting-row">
+                        <div class="setting-label">Windows Update</div>
+                        <div class="setting-value">✓ ACTIVADO</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Actualizaciones automáticas</div>
+                        <div class="setting-value">✓ ACTIVADO</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Actualización en conexiones medidas</div>
+                        <div class="setting-value setting-disabled">✗ DESACTIVADO</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Actualizaciones de otros productos Microsoft</div>
+                        <div class="setting-value">✓ ACTIVADO</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Horario de actividad configurado</div>
+                        <div class="setting-value">8:00 AM - 6:00 PM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 2: Windows Defender -->
+    <div class="image-container">
+        <div class="image-header">
+            🛡️ Figura 2: Windows 11 - Configuración de Windows Defender
+        </div>
+        <div class="image-content">
+            <div class="window-mock">
+                <div class="window-titlebar">
+                    <div class="window-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="window-title">Seguridad de Windows > Protección contra virus y amenazas</div>
+                </div>
+                <div class="window-body">
+                    <div class="setting-row">
+                        <div class="setting-label">Protección en tiempo real</div>
+                        <div class="setting-value">✓ ACTIVADA</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Protección entregada en la nube</div>
+                        <div class="setting-value">✓ ACTIVADA</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Análisis programado</div>
+                        <div class="setting-value">Diario - 2:00 AM</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Protección contra manipulaciones</div>
+                        <div class="setting-value">✓ ACTIVADA</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 3: Política de Contraseñas GPO -->
+    <div class="image-container">
+        <div class="image-header">
+            🔐 Figura 3: Política de Contraseñas - Directiva de Grupo (GPO)
+        </div>
+        <div class="image-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parámetro de Seguridad</th>
+                        <th>Configuración</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Longitud mínima de contraseña</strong></td>
+                        <td>12 caracteres</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Requisitos de complejidad</strong></td>
+                        <td>Habilitado (Mayúsculas, minúsculas, números, símbolos)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vigencia máxima</strong></td>
+                        <td>90 días</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vigencia mínima</strong></td>
+                        <td>1 día</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Historial de contraseñas</strong></td>
+                        <td>Recordar 5 contraseñas anteriores</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Umbral de bloqueo de cuenta</strong></td>
+                        <td>5 intentos fallidos</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- IMAGEN 4: Windows Server Hardening -->
+    <div class="image-container">
+        <div class="image-header">
+            🖥️ Figura 4: Windows Server 2022 - Servicios Deshabilitados (Hardening)
+        </div>
+        <div class="image-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Servicio</th>
+                        <th>Estado</th>
+                        <th>Razón de Seguridad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Print Spooler</strong></td>
+                        <td><span style="color: #dc3545; font-weight: bold;">✗ DESHABILITADO</span></td>
+                        <td>Vulnerabilidad PrintNightmare (CVE-2021-34527)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SMBv1</strong></td>
+                        <td><span style="color: #dc3545; font-weight: bold;">✗ DESHABILITADO</span></td>
+                        <td>Protocolo obsoleto e inseguro</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Telnet</strong></td>
+                        <td><span style="color: #dc3545; font-weight: bold;">✗ DESHABILITADO</span></td>
+                        <td>Transmisión de datos sin cifrar</td>
+                    </tr>
+                    <tr>
+                        <td><strong>FTP Server</strong></td>
+                        <td><span style="color: #dc3545; font-weight: bold;">✗ DESHABILITADO</span></td>
+                        <td>No se requiere para operaciones</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Remote Desktop Services</strong></td>
+                        <td><span style="color: #dc3545; font-weight: bold;">✗ DESHABILITADO</span></td>
+                        <td>No utilizado en este servidor</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="code-box">
+<span class="code-comment"># Script PowerShell ejecutado para deshabilitar Print Spooler</span>
+
+<span class="code-function">Stop-Service</span> -Name Spooler -Force
+<span class="code-function">Set-Service</span> -Name Spooler -StartupType Disabled
+
+<span class="code-comment"># Verificar estado del servicio</span>
+<span class="code-function">Get-Service</span> -Name Spooler | <span class="code-function">Select-Object</span> Name, Status, StartType
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 5: Backup Servidor -->
+    <div class="image-container">
+        <div class="image-header">
+            💾 Figura 5: Windows Server - Configuración de Backup Automático
+        </div>
+        <div class="image-content">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Tipo de Backup</div>
+                    <div class="metric-number">100%</div>
+                    <div class="metric-label">Completo del Servidor</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Frecuencia</div>
+                    <div class="metric-number">24h</div>
+                    <div class="metric-label">Diario a las 11:00 PM</div>
+                </div>
+            </div>
+            
+            <div class="setting-row">
+                <div class="setting-label">Destino Principal</div>
+                <div class="setting-value">Disco Duro Externo</div>
+            </div>
+            <div class="setting-row">
+                <div class="setting-label">Destino Secundario</div>
+                <div class="setting-value">Azure Backup (Nube)</div>
+            </div>
+            <div class="setting-row">
+                <div class="setting-label">Retención Local</div>
+                <div class="setting-value">30 días</div>
+            </div>
+            <div class="setting-row">
+                <div class="setting-label">Retención en Nube</div>
+                <div class="setting-value">365 días (1 año)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 6: Certificado SSL -->
+    <div class="image-container">
+        <div class="image-header">
+            🔒 Figura 6: Aplicaciones Web - Instalación de Certificado SSL (Let's Encrypt)
+        </div>
+        <div class="image-content">
+            <div class="code-box">
+<span class="code-comment"># Instalación de Certbot en servidor Linux</span>
+sudo apt update
+sudo apt install certbot python3-certbot-apache
+
+<span class="code-comment"># Obtener certificado SSL para los dominios</span>
+sudo certbot --apache -d techstoremexico.com -d www.techstoremexico.com
+
+<span class="code-comment"># Configurar renovación automática (cron job)</span>
+sudo crontab -e
+<span class="code-string">0 0 1 * * certbot renew --quiet</span>
+            </div>
+            
+            <div class="alert-box alert-success">
+                <strong>✓ Certificado instalado correctamente</strong><br>
+                Dominio principal: techstoremexico.com<br>
+                Dominio alternativo: www.techstoremexico.com<br>
+                Renovación automática: Primer día de cada mes a medianoche
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 7: Cabeceras de Seguridad -->
+    <div class="image-container">
+        <div class="image-header">
+            🛡️ Figura 7: Aplicaciones Web - Cabeceras de Seguridad HTTP
+        </div>
+        <div class="image-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cabecera de Seguridad</th>
+                        <th>Valor Configurado</th>
+                        <th>Protección</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Strict-Transport-Security</strong></td>
+                        <td>max-age=31536000; includeSubDomains</td>
+                        <td>Forzar HTTPS por 1 año</td>
+                    </tr>
+                    <tr>
+                        <td><strong>X-Frame-Options</strong></td>
+                        <td>SAMEORIGIN</td>
+                        <td>Prevenir Clickjacking</td>
+                    </tr>
+                    <tr>
+                        <td><strong>X-Content-Type-Options</strong></td>
+                        <td>nosniff</td>
+                        <td>Prevenir MIME sniffing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>X-XSS-Protection</strong></td>
+                        <td>1; mode=block</td>
+                        <td>Protección XSS integrada</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- IMAGEN 8: SQL Injection -->
+    <div class="image-container">
+        <div class="image-header">
+            💉 Figura 8: Aplicaciones Web - Protección contra SQL Injection
+        </div>
+        <div class="image-content">
+            <div class="alert-box alert-danger">
+                <strong>❌ CÓDIGO VULNERABLE - NO USAR</strong>
+                <div class="code-box" style="margin-top: 15px;">
+<span class="code-comment">// Vulnerable a SQL Injection</span>
+$query = <span class="code-string">"SELECT * FROM users WHERE email = '"</span> . $_POST[<span class="code-string">'email'</span>] . <span class="code-string">"'"</span>;
+$result = mysqli_query($conn, $query);
+                </div>
+            </div>
+            
+            <div class="icon-large" style="text-align: center;">⬇️</div>
+            
+            <div class="alert-box alert-success">
+                <strong>✅ CÓDIGO SEGURO - USO DE PREPARED STATEMENTS</strong>
+                <div class="code-box" style="margin-top: 15px;">
+<span class="code-comment">// Protegido contra SQL Injection con PDO</span>
+$stmt = $pdo-&gt;<span class="code-function">prepare</span>(<span class="code-string">"SELECT * FROM users WHERE email = :email"</span>);
+$stmt-&gt;<span class="code-function">bindParam</span>(<span class="code-string">':email'</span>, $_POST[<span class="code-string">'email'</span>], PDO::PARAM_STR);
+$stmt-&gt;<span class="code-function">execute</span>();
+$user = $stmt-&gt;<span class="code-function">fetch</span>();
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 9: Router Configuración -->
+    <div class="image-container">
+        <div class="image-header">
+            🌐 Figura 9: Router TP-Link - Configuración de Seguridad
+        </div>
+        <div class="image-content">
+            <div class="window-mock">
+                <div class="window-titlebar">
+                    <div class="window-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="window-title">Router TP-Link - Panel de Administración (192.168.1.1)</div>
+                </div>
+                <div class="window-body">
+                    <h3 style="color: #667eea; margin-bottom: 20px;">Credenciales de Acceso</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parámetro</th>
+                                <th>Valor Predeterminado</th>
+                                <th>Nuevo Valor Seguro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Usuario</strong></td>
+                                <td style="text-decoration: line-through; color: #dc3545;">admin</td>
+                                <td><strong>admin_techstore</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Contraseña</strong></td>
+                                <td style="text-decoration: line-through; color: #dc3545;">admin</td>
+                                <td><strong>Ts#2024$Secure!Router</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h3 style="color: #667eea; margin: 30px 0 20px;">Seguridad WiFi</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">Método de seguridad</div>
+                        <div class="setting-value">WPA3-Personal</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Contraseña WiFi</div>
+                        <div class="setting-value">T3chSt0r3_W1F1_2024!</div>
+                    </div>
+                    
+                    <h3 style="color: #667eea; margin: 30px 0 20px;">Configuraciones Adicionales</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">Administración remota</div>
+                        <div class="setting-value setting-disabled">✗ DESACTIVADA</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">SPI Firewall</div>
+                        <div class="setting-value">✓ ACTIVADO</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Protección DoS</div>
+                        <div class="setting-value">✓ ACTIVADA</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 10: VLANs -->
+    <div class="image-container">
+        <div class="image-header">
+            🔀 Figura 10: Configuración de VLANs en Switch Administrable
+        </div>
+        <div class="image-content">
+            <div class="vlan-grid">
+                <div class="vlan-card vlan-servers">
+                    <div class="vlan-title" style="color: #dc3545;">🖥️ VLAN 10</div>
+                    <div class="icon-large">🔴</div>
+                    <div class="vlan-info"><strong>Nombre:</strong> Servidores</div>
+                    <div class="vlan-info"><strong>Puertos:</strong> 1-4</div>
+                    <div class="vlan-info"><strong>Gateway:</strong> 192.168.10.1/24</div>
+                    <div class="vlan-info" style="color: #dc3545; font-weight: bold;">Alta Seguridad</div>
+                </div>
+                
+                <div class="vlan-card vlan-users">
+                    <div class="vlan-title" style="color: #17a2b8;">👥 VLAN 20</div>
+                    <div class="icon-large">🔵</div>
+                    <div class="vlan-info"><strong>Nombre:</strong> Usuarios</div>
+                    <div class="vlan-info"><strong>Puertos:</strong> 5-16</div>
+                    <div class="vlan-info"><strong>Gateway:</strong> 192.168.20.1/24</div>
+                    <div class="vlan-info" style="color: #17a2b8; font-weight: bold;">Seguridad Estándar</div>
+                </div>
+                
+                <div class="vlan-card vlan-guests">
+                    <div class="vlan-title" style="color: #ffc107;">📱 VLAN 30</div>
+                    <div class="icon-large">🟡</div>
+                    <div class="vlan-info"><strong>Nombre:</strong> WiFi Invitados</div>
+                    <div class="vlan-info"><strong>Puertos:</strong> 17-20</div>
+                    <div class="vlan-info"><strong>Gateway:</strong> 192.168.30.1/24</div>
+                    <div class="vlan-info" style="color: #ffc107; font-weight: bold;">Aislamiento Activado</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 11: MDM Políticas -->
+    <div class="image-container">
+        <div class="image-header">
+            📱 Figura 11: Microsoft Intune - Políticas de Cumplimiento MDM
+        </div>
+        <div class="image-content">
+            <div class="policy-card">
+                <div class="policy-title">🔐 Seguridad del Dispositivo</div>
+                <div class="policy-detail">✓ PIN mínimo de 8 dígitos requerido</div>
+                <div class="policy-detail">✓ Cifrado de dispositivo obligatorio</div>
+                <div class="policy-detail">✓ Detección de Jailbreak/Root = No cumple</div>
+                <div class="policy-detail">✓ Bloqueo automático después de 5 minutos</div>
+                <div class="policy-detail">✓ Solo almacenamiento cifrado permitido</div>
+            </div>
+            
+            <div class="policy-card">
+                <div class="policy-title">✅ Aplicaciones Corporativas Requeridas</div>
+                <div class="policy-detail">📧 Microsoft Outlook (correo corporativo)</div>
+                <div class="policy-detail">💬 Microsoft Teams (comunicación)</div>
+                <div class="policy-detail">🔐 Cisco AnyConnect (VPN corporativa)</div>
+                <div class="policy-detail">🔑 Microsoft Authenticator (MFA)</div>
+            </div>
+            
+            <div class="policy-card">
+                <div class="policy-title">🚫 Aplicaciones Bloqueadas</div>
+                <div class="policy-detail">✗ Tiendas de aplicaciones alternativas</div>
+                <div class="policy-detail">✗ Apps de almacenamiento no autorizadas</div>
+                <div class="policy-detail">✗ Herramientas de acceso remoto no corporativas</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 12: MDM Acciones -->
+    <div class="image-container">
+        <div class="image-header">
+            ⚠️ Figura 12: Microsoft Intune - Acciones por Incumplimiento
+        </div>
+        <div class="image-content">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-circle timeline-day1">1</div>
+                    <div style="font-weight: bold; font-size: 1.1em;">Día 1</div>
+                    <div style="margin-top: 10px;">📧 Notificación enviada al usuario</div>
+                    <div style="color: #666; font-size: 0.9em; margin-top: 5px;">Advertencia inicial</div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-circle timeline-day7">7</div>
+                    <div style="font-weight: bold; font-size: 1.1em;">Día 7</div>
+                    <div style="margin-top: 10px;">🔒 Bloqueo de acceso a correo corporativo</div>
+                    <div style="color: #666; font-size: 0.9em; margin-top: 5px;">Restricción parcial</div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-circle timeline-day14">14</div>
+                    <div style="font-weight: bold; font-size: 1.1em;">Día 14</div>
+                    <div style="margin-top: 10px;">🗑️ Borrado remoto de datos corporativos</div>
+                    <div style="color: #666; font-size: 0.9em; margin-top: 5px;">Acción final</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 13: MySQL Usuario -->
+    <div class="image-container">
+        <div class="image-header">
+            🗄️ Figura 13: MySQL - Configuración de Usuario con Privilegios Mínimos
+        </div>
+        <div class="image-content">
+            <div class="code-box">
+<span class="code-comment">-- Crear usuario específico para la aplicación web</span>
+<span class="code-keyword">CREATE USER</span> <span class="code-string">'techstore_app'@'192.168.10.50'</span> 
+<span class="code-keyword">IDENTIFIED BY</span> <span class="code-string">'Ts#DB$2024!Secure'</span>;
+
+<span class="code-comment">-- Otorgar solo permisos necesarios en la base de datos de producción</span>
+<span class="code-keyword">GRANT</span> <span class="code-keyword">SELECT</span>, <span class="code-keyword">INSERT</span>, <span class="code-keyword">UPDATE</span> 
+<span class="code-keyword">ON</span> techstore_db.* 
+<span class="code-keyword">TO</span> <span class="code-string">'techstore_app'@'192.168.10.50'</span>;
+
+<span class="code-comment">-- NO otorgar permisos de eliminación en tablas críticas</span>
+<span class="code-keyword">REVOKE</span> <span class="code-keyword">DELETE</span> <span class="code-keyword">ON</span> techstore_db.users 
+<span class="code-keyword">FROM</span> <span class="code-string">'techstore_app'@'192.168.10.50'</span>;
+
+<span class="code-comment">-- Verificar privilegios otorgados</span>
+<span class="code-keyword">SHOW GRANTS FOR</span> <span class="code-string">'techstore_app'@'192.168.10.50'</span>;
+
+<span class="code-comment">-- Aplicar cambios inmediatamente</span>
+<span class="code-keyword">FLUSH PRIVILEGES</span>;
+            </div>
+            
+            <h3 style="color: #667eea; margin: 25px 0 15px;">Resumen de Permisos</h3>
+            <div class="metric-grid">
+                <div class="metric-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <div class="metric-label">Permisos Otorgados</div>
+                    <div class="metric-number" style="font-size: 2em;">3</div>
+                    <div class="metric-label">SELECT, INSERT, UPDATE</div>
+                </div>
+                <div class="metric-card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                    <div class="metric-label">Permisos Denegados</div>
+                    <div class="metric-number" style="font-size: 2em;">3</div>
+                    <div class="metric-label">DROP, ALTER, DELETE</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 14: MySQL SSL -->
+    <div class="image-container">
+        <div class="image-header">
+            🔒 Figura 14: MySQL - Configuración SSL/TLS para Conexiones
+        </div>
+        <div class="image-content">
+            <div class="code-box">
+<span class="code-comment"># Configuración en archivo my.cnf (Linux) o my.ini (Windows)</span>
+
+[mysqld]
+<span class="code-keyword">require_secure_transport</span>=<span class="code-string">ON</span>
+<span class="code-keyword">ssl-ca</span>=/etc/mysql/ssl/ca-cert.pem
+<span class="code-keyword">ssl-cert</span>=/etc/mysql/ssl/server-cert.pem
+<span class="code-keyword">ssl-key</span>=/etc/mysql/ssl/server-key.pem
+
+<span class="code-comment"># Verificar que SSL está habilitado</span>
+<span class="code-keyword">SHOW VARIABLES LIKE</span> <span class="code-string">'%ssl%'</span>;
+            </div>
+            
+            <div class="alert-box alert-success">
+                <strong>✓ Conexiones SSL/TLS Obligatorias</strong><br>
+                Todas las conexiones a la base de datos deben usar cifrado SSL/TLS<br>
+                Los certificados están ubicados en /etc/mysql/ssl/
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 15: MySQL Backup -->
+    <div class="image-container">
+        <div class="image-header">
+            💾 Figura 15: MySQL - Script de Backup Automático
+        </div>
+        <div class="image-content">
+            <div class="code-box">
+<span class="code-comment">#!/bin/bash</span>
+<span class="code-comment"># Script: backup_mysql.sh</span>
+
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR=<span class="code-string">"/backups/mysql"</span>
+DB_NAME=<span class="code-string">"techstore_db"</span>
+DB_USER=<span class="code-string">"backup_user"</span>
+DB_PASS=<span class="code-string">"BackupP@ss2024!"</span>
+
+<span class="code-comment"># Crear backup completo con compresión</span>
+mysqldump -u $DB_USER -p$DB_PASS \
+  --single-transaction \
+  --routines \
+  --triggers \
+  --events \
+  $DB_NAME | gzip &gt; $BACKUP_DIR/techstore_$DATE.sql.gz
+
+<span class="code-comment"># Sincronizar con Azure Blob Storage</span>
+azcopy copy <span class="code-string">"$BACKUP_DIR/techstore_$DATE.sql.gz"</span> \
+  <span class="code-string">"https://techstorebackup.blob.core.windows.net/database-backups/"</span>
+
+<span class="code-comment"># Eliminar backups locales mayores a 30 días</span>
+find $BACKUP_DIR -name <span class="code-string">"*.sql.gz"</span> -mtime +30 -delete
+
+echo <span class="code-string">"Backup completado: techstore_$DATE.sql.gz"</span>
+            </div>
+            
+            <table style="margin-top: 25px;">
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Configuración</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Base de datos</strong></td>
+                        <td>techstore_db</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Frecuencia</strong></td>
+                        <td>Automático diario</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Destino local</strong></td>
+                        <td>/backups/mysql (retención 30 días)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Destino nube</strong></td>
+                        <td>Azure Blob Storage (retención permanente)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compresión</strong></td>
+                        <td>GZIP</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- IMAGEN 16: MySQL Auditoría -->
+    <div class="image-container">
+        <div class="image-header">
+            📊 Figura 16: MySQL - Configuración de Auditoría
+        </div>
+        <div class="image-content">
+            <div class="code-box">
+<span class="code-comment">-- Habilitar logging de consultas</span>
+<span class="code-keyword">SET GLOBAL</span> general_log = <span class="code-string">'ON'</span>;
+<span class="code-keyword">SET GLOBAL</span> log_output = <span class="code-string">'TABLE'</span>;
+
+<span class="code-comment">-- Crear tabla de auditoría personalizada</span>
+<span class="code-keyword">CREATE TABLE</span> audit_log (
+    id <span class="code-keyword">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    user <span class="code-keyword">VARCHAR</span>(50),
+    action <span class="code-keyword">VARCHAR</span>(20),
+    table_name <span class="code-keyword">VARCHAR</span>(50),
+    timestamp <span class="code-keyword">DATETIME DEFAULT CURRENT_TIMESTAMP</span>,
+    ip_address <span class="code-keyword">VARCHAR</span>(45)
+);
+
+<span class="code-comment">-- Crear trigger para auditar modificaciones en tabla usuarios</span>
+<span class="code-keyword">DELIMITER</span> $
+<span class="code-keyword">CREATE TRIGGER</span> users_audit_update
+<span class="code-keyword">AFTER UPDATE ON</span> users
+<span class="code-keyword">FOR EACH ROW</span>
+<span class="code-keyword">BEGIN</span>
+    <span class="code-keyword">INSERT INTO</span> audit_log (user, action, table_name, ip_address)
+    <span class="code-keyword">VALUES</span> (<span class="code-function">USER()</span>, <span class="code-string">'UPDATE'</span>, <span class="code-string">'users'</span>, 
+            <span class="code-function">SUBSTRING_INDEX</span>(<span class="code-function">HOST()</span>, <span class="code-string">':'</span>, 1));
+<span class="code-keyword">END</span>$
+<span class="code-keyword">DELIMITER</span> ;
+            </div>
+            
+            <div class="alert-box alert-success">
+                <strong>✓ Auditoría Activada</strong><br>
+                Se registran todas las modificaciones en la tabla de usuarios<br>
+                Información capturada: Usuario, Acción, Tabla, Timestamp, IP
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 17: UPS Sistema -->
+    <div class="image-container">
+        <div class="image-header">
+            ⚡ Figura 17: Sistema UPS - APC Smart-UPS con PowerChute
+        </div>
+        <div class="image-content">
+            <div class="window-mock">
+                <div class="window-titlebar">
+                    <div class="window-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="window-title">PowerChute Business Edition - Dashboard</div>
+                </div>
+                <div class="window-body">
+                    <div class="metric-grid">
+                        <div class="metric-card" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                            <div class="metric-label">Capacidad Total</div>
+                            <div class="metric-number" style="font-size: 2.5em;">10,000</div>
+                            <div class="metric-label">VA (8,000 Watts)</div>
+                        </div>
+                        <div class="metric-card" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%);">
+                            <div class="metric-label">Carga Actual</div>
+                            <div class="metric-number" style="font-size: 2.5em;">1,200</div>
+                            <div class="metric-label">Watts (15%)</div>
+                        </div>
+                        <div class="metric-card" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
+                            <div class="metric-label">Autonomía Estimada</div>
+                            <div class="metric-number" style="font-size: 2.5em;">45</div>
+                            <div class="metric-label">Minutos</div>
+                        </div>
+                        <div class="metric-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                            <div class="metric-label">Estado de Batería</div>
+                            <div class="metric-number" style="font-size: 2.5em;">✓</div>
+                            <div class="metric-label">Saludable</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 18: UPS Eventos -->
+    <div class="image-container">
+        <div class="image-header">
+            ⚙️ Figura 18: UPS - Configuración de Eventos y Acciones
+        </div>
+        <div class="image-content">
+            <div class="policy-card">
+                <div class="policy-title">⚡ Evento 1: Falla de Energía Eléctrica</div>
+                <div class="policy-detail"><strong>Acción:</strong> Enviar notificación por email</div>
+                <div class="policy-detail"><strong>Destinatarios:</strong> ti@techstoremexico.com</div>
+                <div class="policy-detail"><strong>Tiempo de respuesta:</strong> Inmediato</div>
+            </div>
+            
+            <div class="policy-card">
+                <div class="policy-title">🔋 Evento 2: Batería al 20%</div>
+                <div class="policy-detail"><strong>Acción:</strong> Apagado ordenado de servidores</div>
+                <div class="policy-detail"><strong>Secuencia:</strong></div>
+                <div class="policy-detail" style="padding-left: 40px;">1. Notificar usuarios (5 minutos antes)</div>
+                <div class="policy-detail" style="padding-left: 40px;">2. Cerrar servicios web (Apache, MySQL)</div>
+                <div class="policy-detail" style="padding-left: 40px;">3. Apagar servidor de base de datos</div>
+                <div class="policy-detail" style="padding-left: 40px;">4. Apagar servidor web</div>
+                <div class="policy-detail" style="padding-left: 40px;">5. Apagar servidor de archivos</div>
+            </div>
+            
+            <div class="policy-card">
+                <div class="policy-title">🔍 Evento 3: Autotest Programado</div>
+                <div class="policy-detail"><strong>Frecuencia:</strong> Semanal (Domingos 3:00 AM)</div>
+                <div class="policy-detail"><strong>Notificación si falla:</strong> Email + SMS</div>
+                <div class="policy-detail"><strong>Prueba:</strong> Cambio a batería por 2 minutos</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 19: Monitoreo Ambiental -->
+    <div class="image-container">
+        <div class="image-header">
+            🌡️ Figura 19: Monitoreo Ambiental - APC NetBotz 200
+        </div>
+        <div class="image-content">
+            <div class="window-mock">
+                <div class="window-titlebar">
+                    <div class="window-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="window-title">APC NetBotz 200 - Sensores Ambientales</div>
+                </div>
+                <div class="window-body">
+                    <div class="metric-grid">
+                        <div class="metric-card" style="background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);">
+                            <div class="metric-label">Temperatura Actual</div>
+                            <div class="metric-number" style="font-size: 3em;">22°C</div>
+                            <div class="metric-label">✓ Rango Normal</div>
+                        </div>
+                        <div class="metric-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                            <div class="metric-label">Humedad Relativa</div>
+                            <div class="metric-number" style="font-size: 3em;">45%</div>
+                            <div class="metric-label">✓ Rango Óptimo</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: #667eea; margin: 30px 0 15px;">🚨 Alertas Configuradas</h3>
+                    
+                    <div class="alert-box alert-warning">
+                        <strong>🟡 Temperatura &gt; 25°C</strong><br>
+                        Acción: Alerta por email
+                    </div>
+                    
+                    <div class="alert-box alert-danger">
+                        <strong>🔴 Temperatura &gt; 30°C</strong><br>
+                        Acción: Alerta crítica + SMS inmediato
+                    </div>
+                    
+                    <div class="alert-box alert-warning">
+                        <strong>🟡 Humedad &lt; 30% o &gt; 60%</strong><br>
+                        Acción: Alerta por email
+                    </div>
+                    
+                    <div class="alert-box alert-danger">
+                        <strong>🔴 Pérdida de conectividad del sensor</strong><br>
+                        Acción: Alerta inmediata por email y SMS
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 20: Google Workspace MFA -->
+    <div class="image-container">
+        <div class="image-header">
+            🔐 Figura 20: Google Workspace - Configuración de MFA (Autenticación Multi-Factor)
+        </div>
+        <div class="image-content">
+            <div class="window-mock">
+                <div class="window-titlebar">
+                    <div class="window-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="window-title">Admin Console > Seguridad > Autenticación</div>
+                </div>
+                <div class="window-body">
+                    <div class="setting-row">
+                        <div class="setting-label">Verificación en 2 pasos</div>
+                        <div class="setting-value">✓ OBLIGATORIA</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Aplicada a</div>
+                        <div class="setting-value">Todos los usuarios</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Período de gracia</div>
+                        <div class="setting-value">7 días</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Códigos de respaldo</div>
+                        <div class="setting-value">10 códigos automáticos</div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Recordar dispositivo confiable</div>
+                        <div class="setting-value">30 días</div>
+                    </div>
+                    
+                    <h3 style="color: #667eea; margin: 30px 0 15px;">✅ Métodos de Verificación Permitidos</h3>
+                    
+                    <div class="policy-card">
+                        <div class="policy-title">📱 Google Authenticator</div>
+                        <div class="policy-detail" style="color: #28a745; font-weight: bold;">✓ RECOMENDADO - Más seguro</div>
+                    </div>
+                    
+                    <div class="policy-card">
+                        <div class="policy-title">💬 Mensaje SMS</div>
+                        <div class="policy-detail">✓ Permitido</div>
+                    </div>
+                    
+                    <div class="policy-card">
+                        <div class="policy-title">📞 Llamada Telefónica</div>
+                        <div class="policy-detail">✓ Permitido</div>
+                    </div>
+                    
+                    <div class="policy-card">
+                        <div class="policy-title">🔑 Claves de Seguridad FIDO U2F</div>
+                        <div class="policy-detail">✓ Permitido - Hardware físico</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 21: Google Drive Permisos -->
+    <div class="image-container">
+        <div class="image-header">
+            📁 Figura 21: Google Drive - Gestión de Permisos por Carpeta
+        </div>
+        <div class="image-content">
+            <div class="folder-box folder-confidential">
+                <div class="folder-header" style="color: #dc3545; border-color: #dc3545;">
+                    🔴 CARPETA: "Datos de Clientes" (CONFIDENCIAL)
+                </div>
+                <div class="permission-item">
+                    <span><strong>👑 Propietario:</strong></span>
+                    <span>Gerente General</span>
+                </div>
+                <div class="permission-item">
+                    <span><strong>✏️ Editores:</strong></span>
+                    <span>Departamento de Ventas (5 usuarios)</span>
+                </div>
+                <div class="permission-item">
+                    <span><strong>👁️ Lectores:</strong></span>
+                    <span>Atención al Cliente</span>
+                </div>
+                <div class="permission-item">
+                    <span><strong>Compartir externamente:</strong></span>
+                    <span style="color: #dc3545; font-weight: bold;">✗ BLOQUEADO</span>
+                </div>
+                <div class="permission-item">
+                    <span><strong>Descargar/Imprimir (lectores):</strong></span>
+                    <span style="color: #dc3545; font-weight: bold;">✗ DESACTIVADO</span>
+                </div>
+                <div class="permission-item">
+                    <span><strong>Auditoría:</strong></span>
+                    <span style="color: #28a745; font-weight: bold;">✓ ACTIVADA</span>
+                </div>
+            </div>
+            
+            <div class="folder-box folder-public">
+                <div class="folder-header" style="color: #28a745; border-color: #28a745;">
+                    🟢 CARPETA: "Documentos Públicos"
+                </div>
+                <div class="permission-item">
+                    <span><strong>👥 Acceso:</strong></span>
+                    <span>Toda la empresa</span>
+                </div>
+                <div class="permission-item">
+                    <span><strong>Compartir externamente:</strong></span>
+                    <span style="color: #ffc107; font-weight: bold;">⚠️ Con aprobación</span>
+                </div>
+                <div class="permission-item">
+                    <span><strong>Enlaces compartidos:</strong></span>
+                    <span>Expiran en 30 días</span>
+                </div>
+                <div class="permission-item">
+                    <span><strong>Descargar/Imprimir:</strong></span>
+                    <span style="color: #28a745; font-weight: bold;">✓ PERMITIDO</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 22: DLP -->
+    <div class="image-container">
+        <div class="image-header">
+            🛡️ Figura 22: Google Workspace - Políticas DLP (Data Loss Prevention)
+        </div>
+        <div class="image-content">
+            <div class="alert-box alert-danger">
+                <strong>🚫 ACCIÓN: BLOQUEAR</strong><br>
+                <div style="margin-top: 10px; font-size: 1.05em;">
+                    📇 Detección de números de tarjetas de crédito en documentos<br>
+                    🆔 Información de cuentas bancarias
+                </div>
+            </div>
+            
+            <div class="alert-box alert-warning">
+                <strong>⚠️ ACCIÓN: ALERTAR</strong><br>
+                <div style="margin-top: 10px; font-size: 1.05em;">
+                    👤 Información de identificación personal (PII)<br>
+                    📞 Números de teléfono y direcciones personales<br>
+                    📧 Direcciones de correo electrónico en masa
+                </div>
+            </div>
+            
+            <div class="alert-box alert-danger">
+                <strong>🚫 ACCIÓN: BLOQUEAR</strong><br>
+                <div style="margin-top: 10px; font-size: 1.05em;">
+                    🌐 Compartir archivos con dominios externos no autorizados<br>
+                    🔒 Documentos etiquetados como "CONFIDENCIAL"<br>
+                    📊 Archivos con datos sensibles de clientes
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN 23: Backup Cloud -->
+    <div class="image-container">
+        <div class="image-header">
+            💾 Figura 23: Backup en la Nube - Google Workspace a Azure Blob Storage
+        </div>
+        <div class="image-content">
+            <div class="code-box">
+<span class="code-comment">#!/bin/bash</span>
+<span class="code-comment"># Script: cloud_backup.sh</span>
+<span class="code-comment"># Sincronización automática de Google Drive a Azure</span>
+
+<span class="code-comment"># Ejecutar sincronización con rclone</span>
+rclone sync gdrive:/ azure:techstore-backup/ \
+  --drive-shared-with-me \
+  --exclude <span class="code-string">"*.tmp"</span> \
+  --log-file=/var/log/cloud_backup.log \
+  --transfers 10 \
+  --checkers 8 \
+  --verbose
+
+<span class="code-comment"># Verificar integridad de archivos</span>
+rclone check gdrive:/ azure:techstore-backup/ \
+  --one-way \
+  --log-file=/var/log/backup_verification.log
+
+<span class="code-comment"># Enviar notificación del resultado</span>
+<span class="code-keyword">if</span> [ $? -eq 0 ]; <span class="code-keyword">then</span>
+    echo <span class="code-string">"Backup exitoso $(date)"</span> | mail -s <span class="code-string">"Cloud Backup OK"</span> ti@techstoremexico.com
+<span class="code-keyword">else</span>
+    echo <span class="code-string">"ERROR en backup $(date)"</span> | mail -s <span class="code-string">"ALERTA: Cloud Backup FALLÓ"</span> ti@techstoremexico.com
+<span class="code-keyword">fi</span>
+            </div>
+            
+            <table style="margin-top: 25px;">
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Herramienta</strong></td>
+                        <td>rclone (sincronización bidireccional)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Origen</strong></td>
+                        <td>Google Drive (gdrive:/)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Destino</strong></td>
+                        <td>Azure Blob Storage (azure:techstore-backup/)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Frecuencia</strong></td>
+                        <td>Automático diario</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Verificación</strong></td>
+                        <td>Integridad de archivos (checksum)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Notificaciones</strong></td>
+                        <td>Email a ti@techstoremexico.com</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- IMAGEN 24: Actividad Sospechosa -->
+    <div class="image-container">
+        <div class="image-header">
+            🔍 Figura 24: Google Admin - Monitoreo de Actividad Sospechosa
+        </div>
+        <div class="image-content">
+            <div class="policy-card">
+                <div class="policy-title">🌍 Alerta 1: Inicio de sesión desde país no autorizado</div>
+                <div class="policy-detail"><strong>Países permitidos:</strong> México, Estados Unidos</div>
+                <div class="policy-detail"><strong>Detección:</strong> Inicio de sesión desde otra ubicación geográfica</div>
+                <div class="policy-detail"><strong>Acción inmediata:</strong></div>
+                <div class="policy-detail" style="padding-left: 40px;">1. Bloquear cuenta automáticamente</div>
+                <div class="policy-detail" style="padding-left: 40px;">2. Notificar al administrador por email</div>
+                <div class="policy-detail" style="padding-left: 40px;">3. Requerir verificación adicional del usuario</div>
+            </div>
+            
+            <div class="policy-card">
+                <div class="policy-title">📥 Alerta 2: Descarga masiva de archivos</div>
+                <div class="policy-detail"><strong>Umbral:</strong> Más de 500 archivos en 1 hora</div>
+                <div class="policy-detail"><strong>Indicador:</strong> Posible exfiltración de datos</div>
+                <div class="policy-detail"><strong>Acción inmediata:</strong></div>
+                <div class="policy-detail" style="padding-left: 40px;">1. Suspender cuenta temporalmente</div>
+                <div class="policy-detail" style="padding-left: 40px;">2. Notificar al administrador y RRHH</div>
+                <div class="policy-detail" style="padding-left: 40px;">3. Iniciar revisión de seguridad</div>
+            </div>
+            
+            <div class="policy-card">
+                <div class="policy-title">⚙️ Alerta 3: Cambio de configuración de seguridad</div>
+                <div class="policy-detail"><strong>Eventos monitoreados:</strong></div>
+                <div class="policy-detail" style="padding-left: 40px;">• Desactivación de verificación en 2 pasos</div>
+                <div class="policy-detail" style="padding-left: 40px;">• Cambio de contraseña</div>
+                <div class="policy-detail" style="padding-left: 40px;">• Adición de métodos de recuperación</div>
+                <div class="policy-detail"><strong>Acción:</strong> Notificación inmediata al administrador</div>
+            </div>
+            
+            <div class="policy-card">
+                <div class="policy-title">🔒 Alerta 4: Compartir archivos sensibles externamente</div>
+                <div class="policy-detail"><strong>Detección:</strong> Archivos etiquetados como "CONFIDENCIAL"</div>
+                <div class="policy-detail"><strong>Acción inmediata:</strong></div>
+                <div class="policy-detail" style="padding-left: 40px;">1. Bloquear acción de compartir</div>
+                <div class="policy-detail" style="padding-left: 40px;">2. Requerir aprobación de gerencia</div>
+                <div class="policy-detail" style="padding-left: 40px;">3. Registrar en log de auditoría</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 15px; text-align: center; margin-top: 40px;">
+        <h2 style="font-size: 2em; margin-bottom: 15px;">✅ Implementación Completa</h2>
+        <p style="font-size: 1.2em; margin-bottom: 10px;">24 Figuras Generadas para Documento Word</p>
+        <p style="font-size: 1em; opacity: 0.9;">TechStore México - Implementación de Seguridad Informática 2024</p>
+        <div style="margin-top: 25px; padding-top: 25px; border-top: 2px solid rgba(255,255,255,0.3);">
+            <p style="font-size: 0.95em;">💡 Instrucciones: Haz clic derecho sobre cada imagen y selecciona "Guardar imagen como..." para insertarla en tu documento Word</p>
+        </div>
+    </div>
+
+</body>
+</html>
